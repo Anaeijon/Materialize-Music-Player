@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<template id="songEntryTemplate">
+<li class="collection-item">
+	<div>Music
+		<a href="#!" id="play-arrow" class="secondary-content">
+			<i class="material-icons songPlay" >play_arrow</i>
+
+		</a>
+	</div>
+</li>
+</template>
+<script>
+	var SongEntryProto = Object.create(HTMLElement.prototype);
+	SongEntryProto.ownerDoc = document.currentScript.ownerDocument;
+
+	SongEntryProto.createdCallback = function () {
+		// get reference to main document
+		var template = this.ownerDoc.querySelector('#songEntryTemplate');
+		var instanceClone = document.importNode(template.content, true);
+		this.appendChild(instanceClone);
+		this.song = null;
+	};
+	SongEntryProto.attachedCallback = function () {
+		// an instance was inserted into the document
+		songEntry = this;
+		this.querySelector('#play-arrow').onclick = function() {
+
+		};
+	};
+	SongEntryProto.detachedCallback = function () {
+		// an instance was removed from the document
+	};
+	SongEntryProto.attributeChangedCallback = function (attrName, oldVal, newVal) {
+		// an attribute was added, removed, or updated
+	};
+
+	SongEntryProto.setSong = function (song) {
+		this.song = song;
+	};
+	SongEntryProto.getSong = function () {
+		return this.song;
+	};
+	SongEntryProto.remoteCall = function (func) {func("call from song-entry");};
+	var MusicApp = document.registerElement('song-entry', {prototype: SongEntryProto});
+</script>

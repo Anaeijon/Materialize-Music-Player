@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!-- import song-list -->
+<script>
+	/// GLOBAL / WEBSOCKET generate websocket uri from current uri
+	console.log("Hello World!");
+	var getWSURI = function () {
+		var loc = window.location;
+		var ws_uri;
+		if (loc.protocol === "https:") {
+			ws_uri = "wss:";
+		} else {
+			ws_uri = "ws:";
+		}
+		ws_uri += "//" + loc.host;
+		ws_uri += "/";
+		return ws_uri;
+	};
+	var playerSocket = new WebSocket(getWSURI());
+</script>
+<link rel="import" href="song-list.html"/>
+<template id="musicAppTemplate">
+	<div class="row container">
+		<div class="col s12">
+			<div id="cover" class="col m6 s12 covers z-depth-1" style="background-image:url(images/covers/prism.jpg)"></div>
+			<!-- Covers Ends -->
+			<div class="col m6 s12 player z-depth-2 no-padding blue-grey lighten-5">
+				<div class="musicplayer col s12 blue accent-1 z-depth-2 ">
+					<span class="right share">Share</span>
+					<div class="col s12">
+						<form>
+							<span class="title"></span>
+							<span class="right duration"></span>
+							<input type="range" id="duration" min="0" value="0"/>
+							<span class="left current"></span>
+						</form>
+					</div>
+					<div id="controls" class="col s12 controls">
+						<i id="shuffle" class="material-icons">shuffle</i>
+						<i id="repeat" class="material-icons">repeat</i>
+						<i id="prev" class="material-icons">skip_previous</i>
+						<i id="play" class="material-icons">play_circle_outline</i>
+						<i id="next" class="material-icons">skip_next</i>
+						<i id="volume" class="material-icons">volume_up</i>
+						<i id="fav" class="material-icons">favorite</i>
+					</div>
+				</div>
+				<song-list></song-list>
+			</div>
+			<!-- Player Ends -->
+		</div>
+		<!-- COL S12 Ends -->
+	</div>
+	<!--Import jQuery before materialize.js-->
+</template>
+<script>
+	/// CUSTOM ELEMENT
+	var MusicAppProto = Object.create(HTMLElement.prototype);
+	MusicAppProto.ownerDoc = document.currentScript.ownerDocument;
+	MusicAppProto.createdCallback = function () {
+		var template = this.ownerDoc.querySelector('#musicAppTemplate');
+		var instanceClone = document.importNode(template.content, true);
+		this.appendChild(instanceClone);
+	};
+	MusicAppProto.attachedCallback = function () {
+		// an instance was inserted into the document
+		this.songList = this.querySelector("song-list");
+		var controls = this.querySelector('#controls');
+		controls.querySelector('#play').onclick = function () {
+			this.play();
+		};
+		controls.querySelector('#next').onclick = function () {
+			this.next();
+		};
+		controls.querySelector('#prev').onclick = function () {
+			this.prev();
+		};
+		console.log(this.songList);
+		this.songList.helloTest("Hallo Test call from music-app");
+	};
+	MusicAppProto.detachedCallback = function () {
+		// an instance was removed from the document
+	};
+	MusicAppProto.attributeChangedCallback = function (attrName, oldVal, newVal) {
+		// an attribute was added, removed, or updated
+	};
+	MusicAppProto.setSong = function (id) {};
+	MusicAppProto.play = function () {
+		console.log(this.songList);
+	};
+	MusicAppProto.next = function () {};
+	MusicAppProto.prev = function () {};
+	var MusicApp = document.registerElement('music-app', {prototype: MusicAppProto});
+</script>

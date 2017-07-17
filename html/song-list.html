@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- import song-entry -->
+<link rel="import" href="song-entry.html"/>
+<template id="songListTemplate">
+	<div class="playlist col s12 no-padding">
+		<ul class="collection with-header grey lighten-4">
+			<li class="collection-header">
+				<h5>Playlist</h5>
+			</li>
+			<song-entry song="s1"></song-entry>
+			<song-entry song="s2"></song-entry>
+		</ul>
+	</div>
+</template>
+<script>
+	var SongListProto = Object.create(HTMLElement.prototype);
+	SongListProto.ownerDoc = document.currentScript.ownerDocument
+	SongListProto.createdCallback = function () {
+		// get reference to main document
+		var template = this.ownerDoc.querySelector('#songListTemplate');
+		var instanceClone = document.importNode(template.content, true);
+		this.appendChild(instanceClone);
+	};
+	SongListProto.attachedCallback = function () {
+		// an instance was inserted into the document
+		this.loadSongs();
+	};
+	SongListProto.detachedCallback = function () {
+		// an instance was removed from the document
+	};
+	SongListProto.attributeChangedCallback = function (attrName, oldVal, newVal) {
+		// an attribute was added, removed, or updated
+	};
+	SongListProto.loadSongs = function (){
+		
+	};
+	SongListProto.setSongList = function (songs) {};
+	SongListProto.setSong = function (song) {};
+	SongListProto.helloTest = function (text) {console.log(text);};
+	var MusicApp = document.registerElement('song-list', {prototype: SongListProto});
+</script>
