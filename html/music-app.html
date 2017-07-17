@@ -2,7 +2,6 @@
 <!-- import song-list -->
 <script>
 	/// GLOBAL / WEBSOCKET generate websocket uri from current uri
-	console.log("Hello World!");
 	var getWSURI = function () {
 		var loc = window.location;
 		var ws_uri;
@@ -21,30 +20,41 @@
 <template id="musicAppTemplate">
 	<div class="row container">
 		<div class="col s12">
-			<div id="cover" class="col m6 s12 covers z-depth-1" style="background-image:url(images/covers/prism.jpg)"></div>
+			<div id="cover_box" >
+				<img id="cover" src="/art"  class="col m6 s12 covers z-depth-1"  alt="Title" >
+			</div>
 			<!-- Covers Ends -->
 			<div class="col m6 s12 player z-depth-2 no-padding blue-grey lighten-5">
 				<div class="musicplayer col s12 blue accent-1 z-depth-2 ">
 					<span class="right share">Share</span>
 					<div class="col s12">
 						<form>
-							<span class="title"></span>
-							<span class="right duration"></span>
-							<input type="range" id="duration" min="0" value="0"/>
-							<span class="left current"></span>
+							<span class="title" id="title"></span>
+							<span class="right duration" id="duration"></span>
+							<input type="range" id="progress" min="0" value="0"/>
+							<span class="left current" id="time"></span>
 						</form>
 					</div>
 					<div id="controls" class="col s12 controls">
-						<i id="shuffle" class="material-icons">shuffle</i>
-						<i id="repeat" class="material-icons">repeat</i>
-						<i id="prev" class="material-icons">skip_previous</i>
-						<i id="play" class="material-icons">play_circle_outline</i>
-						<i id="next" class="material-icons">skip_next</i>
-						<i id="volume" class="material-icons">volume_up</i>
-						<i id="fav" class="material-icons">favorite</i>
+						<div class="col s3">
+							<i id="repeat" class="material-icons">repeat_one</i>
+							<i id="loop" class="material-icons">repeat</i>
+							<i id="shuffle" class="material-icons">shuffle</i>
+						</div>
+						<div class="col s6">
+							<i id="prev" class="material-icons">skip_previous</i>
+							<i id="play" class="material-icons">play_circle_outline</i>
+							<i id="next" class="material-icons">skip_next</i>
+						</div>
+						<div class="col s3">
+							<i id="voldown" class="material-icons">volume_down</i>
+							<i id="volup" class="material-icons">volume_up</i>
+							<!--<i id="fav" class="material-icons">favorite</i>-->
+							<span class="center volume" id="volume">99</span>
+						</div>
 					</div>
 				</div>
-				<song-list></song-list>
+				<song-list id="playlist"></song-list>
 			</div>
 			<!-- Player Ends -->
 		</div>
@@ -63,19 +73,85 @@
 	};
 	MusicAppProto.attachedCallback = function () {
 		// an instance was inserted into the document
+		this.ws = new WebSocket('ws://' + window.location.host);
+		musicApp = this
+		this.querySelector('#playlist').setOnTitleAction(function(id){
+			musicApp.send_command(command= 'play', value= id);
+		});
+		this.color_active = "#FFFFFF";
+		this.color_off = "#B2D1FF";
+		this.ws.onmessage = function (event) {
+			var msg = JSON.parse(event.data);
+			if (msg.command == 'playing') {
+				musicApp.querySelector('#play').innerHTML = msg.value
+					? "pause_circle_outline"
+					: "play_circle_outline";
+			} else if (msg.command == 'title') {
+				musicApp.querySelector('#title').innerHTML = msg.value.name;
+				musicApp.querySelector('#cover').setAttribute('src', "art/?time=" + new Date().getTime() + ")");
+				musicApp.querySelector('#cover').setAttribute('alt', msg.value.name);
+				musicApp.querySelector('#progress').max = msg.value.duration;
+				musicApp.querySelector('#duration').innerHTML = Math.floor(msg.value.duration / 60) + ":" + Math.floor((msg.value.duration % 60) / 10) + "" + (msg.value.duration % 10);
+			} else if (msg.command == 'time') {
+				musicApp.querySelector('#progress').value = msg.value;
+				// TODO: hours? days? -- just minutes?
+				musicApp.querySelector('#time').innerHTML = Math.floor(msg.value / 60) + ":" + Math.floor((msg.value % 60) / 10) + "" + (msg.value % 10);
+			} else if (msg.command == 'loop') {
+				musicApp.querySelector('#loop').style.color = msg.value
+					? musicApp.color_active
+					: musicApp.color_off;
+			} else if (msg.command == 'repeat') {
+				musicApp.querySelector('#repeat').style.color = msg.value
+					? musicApp.color_active
+					: musicApp.color_off;
+			} else if (msg.command == 'random') {
+				musicApp.querySelector('#shuffle').style.color = msg.value
+					? musicApp.color_active
+					: musicApp.color_off;
+			} else if (msg.command == 'volume') {
+				musicApp.querySelector('#volume').innerHTML = msg.value;
+			} else if (msg.command == 'playlist') {
+				musicApp.querySelector('#playlist').setPlaylist(msg.value);
+			}
+		}
+		this.ws.onopen = function (event) {
+			this.send(JSON.stringify({command: "get_title"}));
+			this.send(JSON.stringify({command: "is_playing"}));
+			this.send(JSON.stringify({command: "get_playlist"}));
+			this.send(JSON.stringify({command: "get_loop"}));
+			this.send(JSON.stringify({command: "get_repeat"}));
+			this.send(JSON.stringify({command: "get_random"}));
+			this.send(JSON.stringify({command: "get_volume"}));
+		}
 		this.songList = this.querySelector("song-list");
 		var controls = this.querySelector('#controls');
 		controls.querySelector('#play').onclick = function () {
-			this.play();
+			musicApp.toggle_pause();
 		};
 		controls.querySelector('#next').onclick = function () {
-			this.next();
+			musicApp.next();
 		};
 		controls.querySelector('#prev').onclick = function () {
-			this.prev();
+			musicApp.prev();
 		};
-		console.log(this.songList);
-		this.songList.helloTest("Hallo Test call from music-app");
+		controls.querySelector('#volup').onclick = function () {
+			musicApp.volup(10);
+		};
+		controls.querySelector('#voldown').onclick = function () {
+			musicApp.voldown(10);
+		};
+		controls.querySelector('#repeat').onclick = function () {
+			musicApp.repeat();
+		};
+		controls.querySelector('#loop').onclick = function () {
+			musicApp.loop();
+		};
+		controls.querySelector('#shuffle').onclick = function () {
+			musicApp.random();
+		};
+		this.querySelector('#progress').oninput = function() {
+			musicApp.seek(this.value);
+		};
 	};
 	MusicAppProto.detachedCallback = function () {
 		// an instance was removed from the document
@@ -84,10 +160,41 @@
 		// an attribute was added, removed, or updated
 	};
 	MusicAppProto.setSong = function (id) {};
-	MusicAppProto.play = function () {
-		console.log(this.songList);
+	MusicAppProto.toggle_pause = function () {
+		console.log("pause");
+		this.send_command('pause');
 	};
-	MusicAppProto.next = function () {};
-	MusicAppProto.prev = function () {};
+	MusicAppProto.next = function () {
+		this.send_command('next');
+	};
+	MusicAppProto.prev = function () {
+		this.send_command('previous');
+	};
+	MusicAppProto.random = function () {
+		this.send_command('random');
+	};
+	MusicAppProto.repeat = function () {
+		this.send_command('repeat');
+	};
+	MusicAppProto.loop = function () {
+		this.send_command('loop');
+	};
+	MusicAppProto.seek = function (time) {
+		console.log("seek "+value);
+		this.send_command('seek', value=time);
+	};
+	MusicAppProto.volup = function (val) {
+		this.send_command('volup', value=val);
+	};
+	MusicAppProto.voldown = function (val) {
+		this.send_command('voldown', value=val);
+	};
+	MusicAppProto.send_command = function (command, value = null) {
+		if (value != null) {
+			this.ws.send(JSON.stringify({command: command, value: value}));
+		} else {
+			this.ws.send(JSON.stringify({command: command}));
+		}
+	};
 	var MusicApp = document.registerElement('music-app', {prototype: MusicAppProto});
 </script>

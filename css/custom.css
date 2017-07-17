@@ -1,8 +1,11 @@
+html {
+  background-color: #161618;
+}
 
 .covers{
   padding: 0px !important;
   margin-top: 50px;
-  height: 500px;
+  height: auto;
   background-size: cover;
 }
 .player{
@@ -70,9 +73,9 @@ input[type=range]::-webkit-slider-thumb {
 .controls i {
   vertical-align: middle;
   color:#FFF;
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: 1.8em;
+  margin-left: 5px;
+  margin-right: 5px;
+  font-size: 1.6em;
 }
 .collection{
   margin-top: 0px
@@ -81,6 +84,9 @@ input[type=range]::-webkit-slider-thumb {
   cursor: pointer;
 }
 .current{
+  color:#FFF;
+}
+.volume{
   color:#FFF;
 }
 .controls #play{

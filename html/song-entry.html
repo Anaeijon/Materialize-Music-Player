@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <template id="songEntryTemplate">
 <li class="collection-item">
-	<div>Music
-		<a href="#!" id="play-arrow" class="secondary-content">
+	<div class="s12">
+		<div id="name" class="s10">Name</div>
+		<a href="#!" id="play-arrow" class="secondary-content s1">
 			<i class="material-icons songPlay" >play_arrow</i>
-
 		</a>
 	</div>
 </li>
@@ -12,20 +12,29 @@
 <script>
 	var SongEntryProto = Object.create(HTMLElement.prototype);
 	SongEntryProto.ownerDoc = document.currentScript.ownerDocument;
+	// Object.defineProperty(SongEntryProto, "title", {writable: true});
+	// Object.defineProperty(SongEntryProto, "onPlay", {writable: true});
+
 
 	SongEntryProto.createdCallback = function () {
 		// get reference to main document
 		var template = this.ownerDoc.querySelector('#songEntryTemplate');
 		var instanceClone = document.importNode(template.content, true);
 		this.appendChild(instanceClone);
-		this.song = null;
+		this.title = null;
+		this.onPlay = null;
+		this.setTitle = function(titleName) {
+			this.querySelector('#name').innerHTML = titleName;
+		};
+		this.setOnPlay = function(onPlay, titleId) {
+			this.querySelector('#play-arrow').onclick = function() {
+				console.log(titleId);
+				onPlay(titleId);
+			};
+		};
 	};
 	SongEntryProto.attachedCallback = function () {
 		// an instance was inserted into the document
-		songEntry = this;
-		this.querySelector('#play-arrow').onclick = function() {
-
-		};
 	};
 	SongEntryProto.detachedCallback = function () {
 		// an instance was removed from the document
@@ -34,12 +43,6 @@
 		// an attribute was added, removed, or updated
 	};
 
-	SongEntryProto.setSong = function (song) {
-		this.song = song;
-	};
-	SongEntryProto.getSong = function () {
-		return this.song;
-	};
 	SongEntryProto.remoteCall = function (func) {func("call from song-entry");};
 	var MusicApp = document.registerElement('song-entry', {prototype: SongEntryProto});
 </script>

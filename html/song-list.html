@@ -3,18 +3,17 @@
 <link rel="import" href="song-entry.html"/>
 <template id="songListTemplate">
 	<div class="playlist col s12 no-padding">
-		<ul class="collection with-header grey lighten-4">
+		<ul class="collection with-header grey lighten-4" id="songs">
 			<li class="collection-header">
 				<h5>Playlist</h5>
 			</li>
-			<song-entry song="s1"></song-entry>
-			<song-entry song="s2"></song-entry>
 		</ul>
 	</div>
 </template>
 <script>
 	var SongListProto = Object.create(HTMLElement.prototype);
 	SongListProto.ownerDoc = document.currentScript.ownerDocument
+	SongListProto.songEntries=[];
 	SongListProto.createdCallback = function () {
 		// get reference to main document
 		var template = this.ownerDoc.querySelector('#songListTemplate');
@@ -22,8 +21,6 @@
 		this.appendChild(instanceClone);
 	};
 	SongListProto.attachedCallback = function () {
-		// an instance was inserted into the document
-		this.loadSongs();
 	};
 	SongListProto.detachedCallback = function () {
 		// an instance was removed from the document
@@ -31,11 +28,28 @@
 	SongListProto.attributeChangedCallback = function (attrName, oldVal, newVal) {
 		// an attribute was added, removed, or updated
 	};
-	SongListProto.loadSongs = function (){
-		
+	SongListProto.setOnTitleAction = function(action){
+		self.onTitleAction = action;
 	};
-	SongListProto.setSongList = function (songs) {};
-	SongListProto.setSong = function (song) {};
+	SongListProto.setPlaylist = function (playlist) {
+		this.clear();
+		songList = this;
+		playlist.forEach(function(title){
+			newEntry = document.createElement("song-entry");
+			newEntry.setTitle(title.name);
+			newEntry.setOnPlay(this.onTitleAction, title.id);
+			songList.songEntries.push(newEntry);
+			songList.querySelector('#songs').appendChild(newEntry);
+		});
+
+	};
+	SongListProto.clear = function(){
+		songList = this.querySelector('#songs');
+		this.songEntries.forEach(function(entry){
+			songList.removeChild(entry);
+		});
+		this.songEntries=[];
+	};
 	SongListProto.helloTest = function (text) {console.log(text);};
 	var MusicApp = document.registerElement('song-list', {prototype: SongListProto});
 </script>
